@@ -9,16 +9,16 @@ df = pd.DataFrame(transaction)
 df["gasUsed"] = pd.to_numeric(df["gasUsed"], errors="coerce")
 df["timestamp"] = pd.to_datetime(df["timestamp"].apply(lambda x : x["$date"] if isinstance(x,dict) else x),format="mixed",utc=True).dt.tz_localize(None)
 df["blockNumber"] = pd.to_numeric(df["blockNumber"])
-df_input = pd.json_normalize(transaction, "inputs", ["txHash","contractAddress","timestamp","blockNumber"],record_prefix="input.")
+df_input = pd.json_normalize(transaction, "inputs", ["transactionHash","contractAddress","timestamp","blockNumber"],record_prefix="input.")
 df_input["timestamp"] = pd.to_datetime(df_input["timestamp"].apply(lambda x : x["$date"] if isinstance(x,dict) else x),format="mixed",utc=True).dt.tz_localize(None)
 df_input["blockNumber"] = pd.to_numeric(df_input["blockNumber"])
-df_storageState = pd.json_normalize(transaction,"storageState",["txHash","contractAddress","timestamp","blockNumber"],record_prefix="storageState.")
+df_storageState = pd.json_normalize(transaction,"storageState",["transactionHash","contractAddress","timestamp","blockNumber"],record_prefix="storageState.")
 df_storageState["timestamp"] = pd.to_datetime(df_storageState["timestamp"].apply(lambda x : x["$date"] if isinstance(x,dict) else x),format="mixed",utc=True).dt.tz_localize(None)
 df_storageState["blockNumber"] = pd.to_numeric(df_storageState["blockNumber"])
-df_internalTxs = pd.json_normalize(transaction,"internalTxs",["txHash","contractAddress","timestamp","blockNumber"],record_prefix="internalTxs.")
+df_internalTxs = pd.json_normalize(transaction,"internalTxs",["transactionHash","contractAddress","timestamp","blockNumber"],record_prefix="internalTxs.")
 df_internalTxs["timestamp"] = pd.to_datetime(df_internalTxs["timestamp"].apply(lambda x : x["$date"] if isinstance(x,dict) else x),format="mixed",utc=True).dt.tz_localize(None)
 df_internalTxs["blockNumber"] = pd.to_numeric(df_internalTxs["blockNumber"])
-df_events = pd.json_normalize(transaction,"events",["txHash","contractAddress","timestamp","blockNumber"],record_prefix="events.")
+df_events = pd.json_normalize(transaction,"events",["transactionHash","contractAddress","timestamp","blockNumber"],record_prefix="events.")
 df_events["timestamp"] = pd.to_datetime(df_events["timestamp"].apply(lambda x : x["$date"] if isinstance(x,dict) else x),format="mixed",utc=True).dt.tz_localize(None)
 df_events["blockNumber"] = pd.to_numeric(df_events["blockNumber"])
 time = range.Range(df["timestamp"].min(),df["timestamp"].max())
@@ -83,14 +83,14 @@ def get_all_sender():
     return pd.DataFrame(all_sender,columns="sender")
 
 def get_activity_count():
-    count_df = df[time_filter & block_filter & contract_filter].groupby(["contractAddress","activity"]).size().reset_index()
+    count_df = df[time_filter & block_filter & contract_filter].groupby(["contractAddress","functionName"]).size().reset_index()
     return count_df
 
 def get_most_active_sender():
     return df[time_filter & block_filter & contract_filter].groupby("sender", as_index=False).size().sort_values("size",ascending=False).head()
 
 def get_gas_used_activity():
-    return df[time_filter & block_filter & contract_filter].groupby(["contractAddress","activity"])["gasUsed"].sum().reset_index()
+    return df[time_filter & block_filter & contract_filter].groupby(["contractAddress","functionName"])["gasUsed"].sum().reset_index()
 
 def get_total_gas_used():
     return df[time_filter & block_filter & contract_filter]["gasUsed"].sum()
